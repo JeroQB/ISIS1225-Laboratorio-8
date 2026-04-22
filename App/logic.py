@@ -27,6 +27,9 @@
 import os
 import csv
 import datetime
+from DataStructures.List import array_list as al
+from DataStructures.Tree import red_black_tree as rbt
+from DataStructures.Map import map_linear_probing as lp
 
 # TODO Realice la importación del Árbol Rojo Negro
 # TODO Realice la importación de ArrayList (al) o SingleLinked (sl) como estructura de datos auxiliar para sus requerimientos
@@ -52,6 +55,7 @@ def new_logic():
 
     analyzer["crimes"] = al.new_list()
     analyzer["dateIndex"] = rbt.new_map()
+    analyzer["areaIndex"] = rbt.new_map()
     # TODO Crear el índice ordenado por áreas reportadas
     return analyzer
 
@@ -79,6 +83,7 @@ def add_crime(analyzer, crime):
     """
     al.add_last(analyzer['crimes'], crime)
     update_date_index(analyzer['dateIndex'], crime)
+    update_area_index(analyzer['areaIndex'], crime)
     # TODO Actualizar el indice por areas reportadas
 
     return analyzer
@@ -91,6 +96,23 @@ def update_area_index(map, crime):
     y si el area son ["", " ", None] se utiliza el valor por defecto 9999
     """
     # TODO Implementar actualizacion del indice por areas reportadas
+    area = crime["REPORTING_AREA"]
+
+    if area is None or area == "" or area == " ":
+        area = 9999
+    else:
+        area = int(area)
+
+    entry = rbt.get(map, area)
+
+    if entry is None:
+        lst = al.new_list()
+        al.add_last(lst, crime)
+        rbt.put(map, area, lst)
+    else:
+        al.add_last(entry, crime)
+
+    return map
     return map
 
 
@@ -189,14 +211,14 @@ def min_key(analyzer):
     """
     Llave mas pequena
     """
-    return rbt.left_key(analyzer["dateIndex"])
+    return rbt.get_min(analyzer["dateIndex"])
 
 
 def max_key(analyzer):
     """
     Llave mas grande
     """
-    return rbt.right_key(analyzer["dateIndex"])
+    return rbt.get_max(analyzer["dateIndex"])
 
 
 def index_height_areas(analyzer):
@@ -204,7 +226,7 @@ def index_height_areas(analyzer):
     Altura del arbol por areas
     """
     # TODO Retornar la altura del árbol por areas
-    pass
+    return rbt.height(analyzer["areaIndex"])
 
 
 def index_size_areas(analyzer):
@@ -212,7 +234,7 @@ def index_size_areas(analyzer):
     Numero de elementos en el indice por areas
     """
     # TODO Retornar el numero de elementos en el árbol por areas
-    pass
+    return rbt.size(analyzer["areaIndex"])
 
 
 def min_key_areas(analyzer):
@@ -220,7 +242,7 @@ def min_key_areas(analyzer):
     Llave mas pequena por areas
     """
     # TODO Retornar la llave más pequeña del árbol por áreas
-    pass
+    return rbt.get_min(analyzer["areaIndex"])
 
 
 def max_key_areas(analyzer):
@@ -228,14 +250,25 @@ def max_key_areas(analyzer):
     Llave mas grande por areas
     """
     # TODO Retornar la llave más grande del árbol por áreas
-    pass
+    return rbt.get_max(analyzer["areaIndex"])
 
 def get_crimes_by_range_area(analyzer, initialArea, finalArea):
     """
     Retorna el numero de crimenes en un rango de areas
     """
     # TODO Completar la consulta de crimenes por rango de areas
+    initialArea = int(initialArea)
+    finalArea = int(finalArea)
+
+    lst = rbt.values(analyzer["areaIndex"], initialArea, finalArea)
     totalcrimes = 0
+
+    current = lst["first"]
+    while current is not None:
+        area_list = current["info"]
+        totalcrimes += al.size(area_list)
+        current = current["next"]
+
     return totalcrimes
 
 def get_crimes_by_range(analyzer, initialDate, finalDate):
@@ -246,8 +279,13 @@ def get_crimes_by_range(analyzer, initialDate, finalDate):
     finalDate = datetime.datetime.strptime(finalDate, '%Y-%m-%d')
     lst = rbt.values(analyzer["dateIndex"], initialDate.date(), finalDate.date())
     totalcrimes = 0
-    for lstdate in lst["elements"]:
+
+    current = lst["first"]
+    while current is not None:
+        lstdate = current["info"]
         totalcrimes += al.size(lstdate["lstcrimes"])
+        current = current["next"]
+
     return totalcrimes
 
 
@@ -258,9 +296,17 @@ def get_crimes_by_range_code(analyzer, initialDate, offensecode):
     """
     initialDate = datetime.datetime.strptime(initialDate, '%Y-%m-%d')
     crimedate = rbt.get(analyzer["dateIndex"], initialDate.date())
+
     if crimedate is not None:
         offensemap = crimedate["offenseIndex"]
-        numoffenses = lp.get(offensemap, offensecode)
-        if numoffenses is not None:
-            return lp.size(numoffenses["lstoffenses"])
+
+        offensecode = offensecode.strip().lower()
+
+        keys = lp.key_set(offensemap)
+        for i in range(al.size(keys)):
+            key = al.get_element(keys, i)
+            if key.lower() == offensecode:
+                offenseentry = lp.get(offensemap, key)
+                return al.size(offenseentry["lstoffenses"])
+
     return 0

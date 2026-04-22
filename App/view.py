@@ -59,6 +59,8 @@ def print_menu():
     print("2- Cargar información de crimenes")
     print("3- Consultar crimenes en un rango de fechas")
     print("4- Consultar crimenes por codigo y fecha")
+    print("5- Consultar crimenes por rango de REPORTING_AREA")
+    
     #TODO Agregar opción 5 en el menú, consultar por REPORTING_AREA
     print("0- Salir")
     print("*******************************************")
@@ -82,14 +84,21 @@ def main():
             # cont es el controlador que se usará de acá en adelante
             control = new_logic()
         elif int(inputs[0]) == 2:
-            print("\nCargando información de crimenes ....")
-            logic.load_data(control, crimefile)
-            print('Crimenes cargados: ' + str(logic.crimes_size(control)))
-            print('Altura del arbol: ' + str(logic.index_height(control)))
-            print('Elementos en el arbol: ' + str(logic.index_size(control)))
-            print('Menor Llave: ' + str(logic.min_key(control)))
-            print('Mayor Llave: ' + str(logic.max_key(control)))
+         print("\nCargando información de crimenes ....")
+         logic.load_data(control, crimefile)
 
+         print("\n========== INDICE POR FECHAS ==========")
+         print('Crimenes cargados: ' + str(logic.crimes_size(control)))
+         print('Altura del arbol: ' + str(logic.index_height(control)))
+         print('Elementos en el arbol: ' + str(logic.index_size(control)))
+         print('Menor Llave: ' + str(logic.min_key(control)))
+         print('Mayor Llave: ' + str(logic.max_key(control)))
+
+         print("\n========== INDICE POR AREAS ==========")
+         print('Altura del arbol por areas: ' + str(logic.index_height_areas(control)))
+         print('Elementos en el arbol por areas: ' + str(logic.index_size_areas(control)))
+         print('Menor Llave por areas: ' + str(logic.min_key_areas(control)))
+         print('Mayor Llave por areas: ' + str(logic.max_key_areas(control)))
         elif int(inputs[0]) == 3:
             print("\nBuscando crimenes en un rango de fechas: ")
             initialDate = input("Fecha Inicial (YYYY-MM-DD): ")
@@ -107,9 +116,18 @@ def main():
                 str(numoffenses))
         elif int(inputs[0]) == 5:
             # TODO lab 9, implementar el I/O e invocar las funcions de la opcion 5
-            print("\nBuscando crimenes en un rango de areas: ")
-            print("Las areas estan numeradas con enteros (1 - 962)")
-            print("Un area desconocida tiene el el numero 9999")
+             print("\nBuscando crimenes en un rango de REPORTING_AREA:")
+             initialArea = input("Area inicial: ")
+             finalArea = input("Area final: ")
+
+             total = logic.get_crimes_by_range_area(control, initialArea, finalArea)
+
+             print("\nTotal de crimenes en el rango de areas: " + str(total))
+        elif int(inputs[0]) == 0:
+            working = False
+            print("\nGracias por usar el programa")
+
         else:
-            sys.exit(0)
+            print("Opción errónea, vuelva a elegir.\n")
+
     sys.exit(0)
